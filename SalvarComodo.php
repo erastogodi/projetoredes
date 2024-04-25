@@ -2,36 +2,35 @@
 // Inclua o arquivo de conexão com o banco de dados
 include 'conexao.php';
 
-
-
 // Verifique se o formulário foi submetido
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Recupere os dados do formulário
-    $nomeLocal = $_POST['nome-local'];
-    $tipoAmbiente = $_POST['tipo-ambiente'];
+    $nomeComodo = $_POST['nome-comodo'];
+    $nivelInterferencia = $_POST['nivel-interferencia'];
+    $localId = $_POST['local-id'];
 
-    // Construa a consulta SQL
-    $sql = "INSERT INTO local (nome_local, tipo_ambiente) VALUES ('$nomeLocal', '$tipoAmbiente')";
+    // Construa a consulta SQL para inserir o cômodo
+    $sql = "INSERT INTO comodo_interferencia (local_id, nome_comodo, nivel_interferencia) 
+            VALUES ('$localId', '$nomeComodo', '$nivelInterferencia')";
 
     // Execute a consulta
     if ($conexao->query($sql) === TRUE) {
-        // Redirecionar para a página SalvarComodo.php
-        header("Location: SalvarComodo.php");
-        exit(); // Certifique-se de sair após o redirecionamento
+        echo "Cômodo inserido com sucesso!";
     } else {
-        echo "Erro ao inserir dados: " . $conexao->error;
+        echo "Erro ao inserir cômodo: " . $conexao->error;
     }
+
     // Feche a conexão com o banco de dados
     $conexao->close();
 }
 ?>
-
-<!DOCTYPE html>
+ 
+ <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medição de Sinais de Rede - Inserir</title>
+    <title>Medição de Sinais de Rede - Salvar Cômodo</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -88,26 +87,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     <header>
-        <h1>Cadastro de Ambiente</h1>
+        <h1>Inserir Cômodo</h1>
     </header>
     
     <nav>
         <a href="index.php">Inserir Cômodos</a> |
-        <a href="relatorio.html">Relatório</a> |
+        <a href="relatorio.php">Relatório</a> |
         <a href="mapa.html">Mapa de Calor</a>
     </nav>
 
-    <!-- Formulário para escolher o nome do local e o tipo de ambiente -->
-    <form id="escolher-ambiente" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-        <h2>Escolher Nome do Local e Tipo de Ambiente</h2>
-        <label for="nome-local">Nome do Local:</label>
-        <input type="text" id="nome-local" name="nome-local"><br>
-        <label for="tipo-ambiente">Tipo de Ambiente:</label>
-        <select id="tipo-ambiente" name="tipo-ambiente">
-            <option value="residencial">Residencial</option>
-            <option value="comercial">Comercial</option>
-        </select><br>
-        <input type="submit" name="submit" value="Continuar">
+    <!-- Formulário para inserir o nome do cômodo e o nível de interferência -->
+    <form id="inserir-comodo" action="salvar_comodo_processar.php" method="post">
+        <h2>Adicionar Cômodo</h2>
+        <label for="nome-comodo">Nome do Cômodo:</label>
+        <input type="text" id="nome-comodo" name="nome-comodo" required><br>
+        <label for="nivel-interferencia">Nível de Interferência:</label>
+        <input type="number" id="nivel-interferencia" name="nivel-interferencia" required><br>
+        <input type="hidden" name="local-id" value="<?php echo $ultimo_local_id; ?>">
+        <input type="submit" name="submit" value="Cadastrar Cômodo">
     </form>
 
     <footer>
