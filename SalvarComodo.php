@@ -11,31 +11,37 @@ if ($resultadoUltimoLocalId && $resultadoUltimoLocalId->num_rows > 0) {
     $ultimoLocalId = $row['ultimo_local_id'];
 }
 
-// Verifique se o formulário foi submetido
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
+// Verifique se o formulário foi submetido para adicionar cômodo
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nome-comodo']) && isset($_POST['nivel-interferencia'])) {
     // Recupere os dados do formulário e valide-os
     $nomeComodo = mysqli_real_escape_string($conexao, $_POST['nome-comodo']);
     $nivelInterferencia = intval($_POST['nivel-interferencia']); // Converte para inteiro
 
-    // Construa a consulta SQL para inserir o cômodo usando prepared statements
-    $stmt = $conexao->prepare("INSERT INTO comodos (local_id, nome, nivel_interferencia) VALUES (?, ?, ?)");
-    $stmt->bind_param("iss", $ultimoLocalId, $nomeComodo, $nivelInterferencia);
-
-    // Execute a consulta
-    if ($stmt->execute()) {
-        echo "Cômodo inserido com sucesso!";
+    // Verifique se já existe um cômodo com o mesmo nome no mesmo local_id
+    $sqlVerificarComodo = "SELECT id FROM comodos WHERE nome = '$nomeComodo' AND local_id = $ultimoLocalId";
+    $resultadoVerificarComodo = $conexao->query($sqlVerificarComodo);
+    if ($resultadoVerificarComodo && $resultadoVerificarComodo->num_rows > 0) {
+        echo "Erro ao inserir cômodo: Já existe um cômodo com o mesmo nome neste local.";
     } else {
-        // Tratamento de erro mais detalhado
-        if ($conexao->errno == 1062) {
-            echo "Erro ao inserir cômodo: O nome do cômodo já existe.";
-        } else {
-            echo "Erro ao inserir cômodo: " . $conexao->error;
-        }
-    }
+        // Construa a consulta SQL para inserir o cômodo usando prepared statements
+        $stmt = $conexao->prepare("INSERT INTO comodos (local_id, nome, nivel_interferencia) VALUES (?, ?, ?)");
+        $stmt->bind_param("iss", $ultimoLocalId, $nomeComodo, $nivelInterferencia);
 
-    // Feche a instrução preparada
-    $stmt->close();
+        // Execute a consulta
+        if ($stmt->execute()) {
+            echo "Cômodo inserido com sucesso!";
+        } else {
+            // Tratamento de erro mais detalhado
+            if ($conexao->errno == 1062) {
+                echo "Erro ao inserir cômodo: O nome do cômodo já existe.";
+            } else {
+                echo "Erro ao inserir cômodo: " . $conexao->error;
+            }
+        }
+
+        // Feche a instrução preparada
+        $stmt->close();
+    }
 }
 
 // Consulta para recuperar os cômodos associados ao último local_id adicionado
@@ -139,9 +145,9 @@ $conexao->close();
     </header>
     
     <nav>
-        <a href="index.php">Inserir Cômodos</a> |
-        <a href="relatorio.php">Relatório</a> |
-        <a href="mapa.html">Mapa de Calor</a>
+        <a href="#">Inserir Cômodos</a> |
+        <a href="#">Medições</a> |
+        <a href="#">Mapa de Calor</a>
     </nav>
 
     <div class="container">
@@ -163,7 +169,10 @@ $conexao->close();
             if (!empty($comodos)) {
                 echo "<h2>Cômodos Inseridos:</h2>";
                 foreach ($comodos as $comodo) {
-                    echo "<p>$comodo</p>";
+                    echo "<p>$comodo 
+                            <a href='#' class='editar-comodo' data-comodo='$comodo'>Editar</a> 
+                            <a href='#' class='excluir-comodo' data-comodo='$comodo'>Excluir</a>
+                        </p>";
                 }
             }
             ?>
@@ -173,5 +182,62 @@ $conexao->close();
     <footer>
         <p>&copy; 2024 Medição de Sinais de Rede</p>
     </footer>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Adicionar Comodo
+            $('#inserir-comodo').submit(function(event){
+                event.preventDefault(); // Impede o envio do formulário padrão
+                var formData = $(this).serialize(); // Serializa os dados do formulário
+                $.ajax({
+                    type: 'POST',
+                    url: '<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>', // Script PHP para inserir o cômodo
+                    data: formData,
+                    success: function(response){
+                        alert(response); // Exibe a mensagem de sucesso ou erro
+                        // Atualiza a lista de cômodos
+                        $('#comodos-inseridos').load('<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?> #comodos-inseridos');
+                    }
+                });
+            });
+
+            // Editar Comodo
+            $(document).on('click', '.editar-comodo', function(){
+                var comodo = $(this).data('comodo');
+                var novoNome = prompt('Novo nome do cômodo:', comodo);
+                if (novoNome != null) {
+                    $.ajax({
+                        type: 'POST',
+                        url: 'atualizar_comodo.php', // Script PHP para atualizar o cômodo
+                        data: { nome_comodo_atual: comodo, novo_nome_comodo: novoNome },
+                        success: function(response){
+                            alert(response); // Exibe a mensagem de sucesso ou erro
+                            // Atualiza a lista de cômodos
+                            $('#comodos-inseridos').load('<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?> #comodos-inseridos');
+                        }
+                    });
+                }
+            });
+
+            // Excluir Comodo
+            $(document).on('click', '.excluir-comodo', function(){
+                var comodo = $(this).data('comodo');
+                if (confirm('Tem certeza que deseja excluir o cômodo "' + comodo + '"?')) {
+                    $.ajax({
+                        type: 'POST',
+                        url: 'deletar_comodo.php', // Script PHP para excluir o cômodo
+                        data: { nome_comodo: comodo },
+                        success: function(response){
+                            alert(response); // Exibe a mensagem de sucesso ou erro
+                            // Atualiza a lista de cômodos
+                            $('#comodos-inseridos').load('<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?> #comodos-inseridos');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
