@@ -1,52 +1,3 @@
-<?php
-// Inicializa variáveis para armazenar mensagens de erro ou sucesso
-$mensagem_erro = $mensagem_sucesso = '';
-
-// Verifica se o formulário foi submetido
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Verifica se o campo 'tipo-ambiente' está definido no array $_POST
-    if (isset($_POST['tipo-ambiente'])) {
-        // Obtém o valor do tipo de ambiente do array $_POST
-        $tipo_ambiente = $_POST['tipo-ambiente'];
-        
-        // Adicione este valor à sua consulta SQL
-
-        // Inclua o arquivo de conexão
-        include 'conexao.php';
-
-        // Verifica se os campos do formulário foram definidos
-        if(isset($_POST['nome-comodo']) && isset($_POST['nivel-interferencia']) && isset($_POST['tipo-comodo'])){
-            // Obtém os dados do formulário
-            $nome_comodo = $_POST['nome-comodo'];
-            $nivel_interferencia = $_POST['nivel-interferencia'];
-            $tipo_comodo = $_POST['tipo-comodo']; 
-
-            // Query para inserir os dados no banco de dados
-            $sql = "INSERT INTO comodos (nome, nivel_interferencia, tipo_ambiente) VALUES ('$nome_comodo', '$nivel_interferencia', '$tipo_comodo')";
-
-            // Executa a query
-            $resultado = mysqli_query($conexao, $sql);
-
-            if ($resultado) {
-                // Define a mensagem de sucesso
-                $mensagem_sucesso = 'Cômodo adicionado com sucesso!';
-            } else {
-                // Define a mensagem de erro
-                $mensagem_erro = 'Erro ao adicionar cômodo: ' . mysqli_error($conexao);
-            }
-
-            // Fecha a conexão com o banco de dados
-            mysqli_close($conexao);
-        } else {
-            $mensagem_erro = "Por favor, preencha todos os campos do formulário.";
-        }
-    } else {
-        // Se o campo 'tipo-ambiente' não estiver definido no array $_POST, exibe uma mensagem de erro
-        $mensagem_erro = "O campo 'tipo-ambiente' não foi enviado pelo formulário.";
-    }
-}
-?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -142,6 +93,62 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </nav>
 
     <!-- Exibe mensagens de erro ou sucesso -->
+    <?php 
+    // Inicializa variáveis para armazenar mensagens de erro ou sucesso
+    $mensagem_erro = $mensagem_sucesso = '';
+
+    // Verifica se o formulário foi submetido
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        // Verifica se o campo 'tipo-ambiente' está definido no array $_POST
+        if (isset($_POST['tipo-ambiente'])) {
+            // Obtém o valor do tipo de ambiente do array $_POST
+            $tipo_ambiente = $_POST['tipo-ambiente'];
+            
+            // Adicione este valor à sua consulta SQL
+
+            // Inclua o arquivo de conexão
+            include 'conexao.php';
+
+            // Verifica se os campos do formulário foram definidos
+            if(isset($_POST['nome-comodo']) && isset($_POST['nivel-interferencia']) && isset($_POST['tipo-comodo'])){
+                // Obtém os dados do formulário
+                $nome_comodo = $_POST['nome-comodo'];
+                $nivel_interferencia = $_POST['nivel-interferencia'];
+                $tipo_comodo = $_POST['tipo-comodo']; 
+                
+                // Adicionando as novas colunas
+                $nivel_sinal_2_4GHz = floatval($_POST['nivel-sinal-2-4GHz']); // Nível de sinal 2.4GHz
+                $nivel_sinal_5GHz = floatval($_POST['nivel-sinal-5GHz']); // Nível de sinal 5GHz
+                $velocidade_2_4GHz = intval($_POST['velocidade-2-4GHz']); // Velocidade 2.4GHz
+                $velocidade_5GHz = intval($_POST['velocidade-5GHz']); // Velocidade 5GHz
+
+                // Query para inserir os dados no banco de dados
+                $sql = "INSERT INTO comodos (nome, nivel_interferencia, tipo_ambiente, nivel_sinal_2_4GHz, nivel_sinal_5GHz, velocidade_2_4GHz, velocidade_5GHz) 
+                        VALUES ('$nome_comodo', '$nivel_interferencia', '$tipo_comodo', '$nivel_sinal_2_4GHz', '$nivel_sinal_5GHz', '$velocidade_2_4GHz', '$velocidade_5GHz')";
+
+                // Executa a query
+                $resultado = mysqli_query($conexao, $sql);
+
+                if ($resultado) {
+                    // Define a mensagem de sucesso
+                    $mensagem_sucesso = 'Cômodo adicionado com sucesso!';
+                } else {
+                    // Define a mensagem de erro
+                    $mensagem_erro = 'Erro ao adicionar cômodo: ' . mysqli_error($conexao);
+                }
+
+                // Fecha a conexão com o banco de dados
+                mysqli_close($conexao);
+            } else {
+                $mensagem_erro = "Por favor, preencha todos os campos do formulário.";
+            }
+        } else {
+            // Se o campo 'tipo-ambiente' não estiver definido no array $_POST, exibe uma mensagem de erro
+            $mensagem_erro = "O campo 'tipo-ambiente' não foi enviado pelo formulário.";
+        }
+    }
+    ?>
+
     <?php if (!empty($mensagem_erro)): ?>
         <div class="mensagem-erro"><?php echo $mensagem_erro; ?></div>
     <?php elseif (!empty($mensagem_sucesso)): ?>
@@ -165,6 +172,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <select id="tipo-comodo" name="tipo-comodo">
             <!-- Aqui você pode adicionar opções dinamicamente, se necessário -->
         </select>
+        <!-- Novas colunas -->
+        <label for="nivel-sinal-2-4GHz">Nível de Sinal 2.4GHz (dBm):</label>
+        <input type="text" id="nivel-sinal-2-4GHz" name="nivel-sinal-2-4GHz" required>
+        <label for="nivel-sinal-5GHz">Nível de Sinal 5GHz (dBm):</label>
+        <input type="text" id="nivel-sinal-5GHz" name="nivel-sinal-5GHz" required>
+        <label for="velocidade-2-4GHz">Velocidade 2.4GHz (Mbps):</label>
+        <input type="text" id="velocidade-2-4GHz" name="velocidade-2-4GHz" required>
+        <label for="velocidade-5GHz">Velocidade 5GHz (Mbps):</label>
+        <input type="text" id="velocidade-5GHz" name="velocidade-5GHz" required>
         <input type="submit" value="Adicionar Cômodo">
     </form>
 

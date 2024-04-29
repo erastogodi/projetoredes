@@ -1,18 +1,25 @@
 <?php
 include 'conexao.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nome_comodo'])) {
-    $nomeComodo = mysqli_real_escape_string($conexao, $_POST['nome_comodo']);
+if (isset($_GET['id'])) {
+    $id = intval($_GET['id']);
 
-    $sqlExcluirComodo = "DELETE FROM comodos WHERE nome = '$nomeComodo'";
-    if ($conexao->query($sqlExcluirComodo)) {
-        echo "Cômodo '$nomeComodo' excluído com sucesso!";
+    $sql = "DELETE FROM comodos WHERE id = ?";
+    $stmt = $conexao->prepare($sql);
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        $stmt->close();
+        $conexao->close();
+        // Redirecionamento após a exclusão com sucesso
+        header("Location: salvarcomodo.php?status=success");
+        exit;
     } else {
         echo "Erro ao excluir cômodo: " . $conexao->error;
+        $stmt->close();
     }
 } else {
-    echo "Nome do cômodo não recebido.";
+    echo "ID não especificado.";
 }
-
 $conexao->close();
 ?>

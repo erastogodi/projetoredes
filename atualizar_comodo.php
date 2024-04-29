@@ -1,17 +1,33 @@
 <?php
 include 'conexao.php';
 
+// Verifica se o método POST foi usado e se os campos necessários estão presentes
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nome_comodo_atual']) && isset($_POST['novo_nome_comodo'])) {
-    $nomeComodoAtual = mysqli_real_escape_string($conexao, $_POST['nome_comodo_atual']);
-    $novoNomeComodo = mysqli_real_escape_string($conexao, $_POST['novo_nome_comodo']);
+    $nomeComodoAtual = $_POST['nome_comodo_atual'];
+    $novoNomeComodo = $_POST['novo_nome_comodo'];
 
-    $sqlAtualizarComodo = "UPDATE comodos SET nome = '$novoNomeComodo' WHERE nome = '$nomeComodoAtual'";
-    if ($conexao->query($sqlAtualizarComodo)) {
-        echo "Cômodo atualizado com sucesso!";
+    // Preparando a consulta para evitar SQL injection
+    $stmt = $conexao->prepare("UPDATE comodos SET nome = ? WHERE nome = ?");
+    if ($stmt) {
+        // Vinculando parâmetros para marcadores
+        $stmt->bind_param("ss", $novoNomeComodo, $nomeComodoAtual);
+
+        // Executando a consulta
+        if ($stmt->execute()) {
+            echo "Cômodo atualizado com sucesso!";
+        } else {
+            echo "Erro ao atualizar cômodo: " . $stmt->error;
+        }
+
+        // Fechando o statement
+        $stmt->close();
     } else {
-        echo "Erro ao atualizar cômodo: " . $conexao->error;
+        echo "Erro ao preparar a consulta: " . $conexao->error;
     }
-}
 
-$conexao->close();
+    // Fechando a conexão
+    $conexao->close();
+} else {
+    echo "Todos os dados necessários não foram enviados.";
+}
 ?>
