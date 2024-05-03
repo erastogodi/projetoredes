@@ -1,0 +1,19 @@
+Script para Criação do banco
+
+CREATE TABLE local (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome_local VARCHAR(40),
+    tipo_ambiente VARCHAR(15)
+);
+
+CREATE TABLE comodos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100),
+    nivel_interferencia INT(1000),
+    nivel_sinal_2_4GHz DECIMAL,
+    nivel_sinal_5GHz DECIMAL,
+    velocidade_2_4GHz INT,
+    velocidade_5GHz INT,
+    local_id INT(11),
+    FOREIGN KEY (local_id) REFERENCES local(id)
+);
