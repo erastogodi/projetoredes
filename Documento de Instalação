@@ -2,5 +2,5 @@ Documento de Instalação
 
 1. Clone o projeto "projetoredes"
 2. Conecte o xampp
-3. Execute o script no Banco de Dados
-4. abra o arquivo localhost/index.php
+3. Execute o script para criação das tabelas no Banco de Dados
+4. abra o arquivo localhost/projetoredes/index.php
